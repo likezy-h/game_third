@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\engine\component\component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\component\sprite_component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\component\transform_component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\core\config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\core\context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\core\game_app.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\core\time.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\input\input_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\object\game_object.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\render\camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\render\renderer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\render\sprite.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\resource\audio_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\resource\font_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\resource\resource_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\resource\texture_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\scene\scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\scene\scene_manager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\utils\alignment.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\utils\math.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\scene\game_scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\component\parallax_component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\component\physics_component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\component\tilelayer_component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\physics\physics_engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\scene\level_loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\engine\component\sprite_component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\component\transform_component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\core\config.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\core\context.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\core\game_app.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\core\time.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\input\input_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\object\game_object.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\render\camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\render\renderer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\resource\audio_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\resource\font_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\resource\resource_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\resource\texture_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\scene\scene.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\scene\scene_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\scene\game_scene.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\component\parallax_component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\component\physics_component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\component\tilelayer_component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\physics\physics_engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\scene\level_loader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
