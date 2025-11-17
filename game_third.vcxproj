@@ -151,7 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\component\animation_component.h" />
+    <ClInclude Include="src\engine\component\collider_component.h" />
     <ClInclude Include="src\engine\component\component.h" />
+    <ClInclude Include="src\engine\component\health_component.h" />
     <ClInclude Include="src\engine\component\parallax_component.h" />
     <ClInclude Include="src\engine\component\physics_component.h" />
     <ClInclude Include="src\engine\component\sprite_component.h" />
@@ -163,7 +166,10 @@
     <ClInclude Include="src\engine\core\time.h" />
     <ClInclude Include="src\engine\input\input_manager.h" />
     <ClInclude Include="src\engine\object\game_object.h" />
+    <ClInclude Include="src\engine\physics\collider.h" />
+    <ClInclude Include="src\engine\physics\collision.h" />
     <ClInclude Include="src\engine\physics\physics_engine.h" />
+    <ClInclude Include="src\engine\render\animation.h" />
     <ClInclude Include="src\engine\render\camera.h" />
     <ClInclude Include="src\engine\render\renderer.h" />
     <ClInclude Include="src\engine\render\sprite.h" />
@@ -176,9 +182,25 @@
     <ClInclude Include="src\engine\scene\scene_manager.h" />
     <ClInclude Include="src\engine\utils\alignment.h" />
     <ClInclude Include="src\engine\utils\math.h" />
+    <ClInclude Include="src\game\component\ai\ai_behavior.h" />
+    <ClInclude Include="src\game\component\ai\jump_behavior.h" />
+    <ClInclude Include="src\game\component\ai\patrol_behavior.h" />
+    <ClInclude Include="src\game\component\ai\updown_behavior.h" />
+    <ClInclude Include="src\game\component\ai_component.h" />
+    <ClInclude Include="src\game\component\player_component.h" />
+    <ClInclude Include="src\game\component\state\dead_state.h" />
+    <ClInclude Include="src\game\component\state\fall_state.h" />
+    <ClInclude Include="src\game\component\state\hurt_state.h" />
+    <ClInclude Include="src\game\component\state\idle_state.h" />
+    <ClInclude Include="src\game\component\state\jump_state.h" />
+    <ClInclude Include="src\game\component\state\player_state.h" />
+    <ClInclude Include="src\game\component\state\walk_state.h" />
     <ClInclude Include="src\game\scene\game_scene.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\component\animation_component.cpp" />
+    <ClCompile Include="src\engine\component\collider_component.cpp" />
+    <ClCompile Include="src\engine\component\health_component.cpp" />
     <ClCompile Include="src\engine\component\parallax_component.cpp" />
     <ClCompile Include="src\engine\component\physics_component.cpp" />
     <ClCompile Include="src\engine\component\sprite_component.cpp" />
@@ -190,7 +212,9 @@
     <ClCompile Include="src\engine\core\time.cpp" />
     <ClCompile Include="src\engine\input\input_manager.cpp" />
     <ClCompile Include="src\engine\object\game_object.cpp" />
+    <ClCompile Include="src\engine\physics\collision.cpp" />
     <ClCompile Include="src\engine\physics\physics_engine.cpp" />
+    <ClCompile Include="src\engine\render\animation.cpp" />
     <ClCompile Include="src\engine\render\camera.cpp" />
     <ClCompile Include="src\engine\render\renderer.cpp" />
     <ClCompile Include="src\engine\resource\audio_manager.cpp" />
@@ -200,6 +224,18 @@
     <ClCompile Include="src\engine\scene\level_loader.cpp" />
     <ClCompile Include="src\engine\scene\scene.cpp" />
     <ClCompile Include="src\engine\scene\scene_manager.cpp" />
+    <ClCompile Include="src\game\component\ai\jump_behavior.cpp" />
+    <ClCompile Include="src\game\component\ai\patrol_behavior.cpp" />
+    <ClCompile Include="src\game\component\ai\updown_behavior.cpp" />
+    <ClCompile Include="src\game\component\ai_component.cpp" />
+    <ClCompile Include="src\game\component\player_component.cpp" />
+    <ClCompile Include="src\game\component\state\dead_state.cpp" />
+    <ClCompile Include="src\game\component\state\fall_state.cpp" />
+    <ClCompile Include="src\game\component\state\hurt_state.cpp" />
+    <ClCompile Include="src\game\component\state\idle_state.cpp" />
+    <ClCompile Include="src\game\component\state\jump_state.cpp" />
+    <ClCompile Include="src\game\component\state\player_state.cpp" />
+    <ClCompile Include="src\game\component\state\walk_state.cpp" />
     <ClCompile Include="src\game\scene\game_scene.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>

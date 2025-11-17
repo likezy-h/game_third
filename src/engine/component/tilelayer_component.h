@@ -12,6 +12,10 @@ namespace engine::core {
     class Context;
 }
 
+namespace engine::physics {
+    class PhysicsEngine;
+}
+
 namespace engine::component {
     /**
      * @brief 定义瓦片的类型，用于游戏逻辑（例如碰撞）。
@@ -20,6 +24,14 @@ namespace engine::component {
         EMPTY,      ///< @brief 空白瓦片
         NORMAL,     ///< @brief 普通瓦片
         SOLID,      ///< @brief 静止可碰撞瓦片
+        UNISOLID,   ///< @brief 单向静止可碰撞瓦片
+        SLOPE_0_1,  ///< @brief 斜坡瓦片，高度:左0  右1
+        SLOPE_1_0,  ///< @brief 斜坡瓦片，高度:左1  右0
+        SLOPE_0_2,  ///< @brief 斜坡瓦片，高度:左0  右1/2
+        SLOPE_2_1,  ///< @brief 斜坡瓦片，高度:左1/2右1
+        SLOPE_1_2,  ///< @brief 斜坡瓦片，高度:左1  右1/2
+        SLOPE_2_0,  ///< @brief 斜坡瓦片，高度:左1/2右0
+        HAZARD,     ///< @brief 危险瓦片（例如火焰、尖刺等）
         // 未来补充其它类型
     };
 
@@ -47,6 +59,7 @@ namespace engine::component {
         glm::vec2 offset_ = { 0.0f, 0.0f };   ///< @brief 瓦片层在世界中的偏移量 (瓦片层通常不需要缩放及旋转，因此不引入Transform组件)
         // offset_ 最好也保持默认的0，以免增加不必要的复杂性
         bool is_hidden_ = false;            ///< @brief 是否隐藏（不渲染）
+        engine::physics::PhysicsEngine* physics_engine_ = nullptr;   ///< @brief 物理引擎的指针， clean()函数中可能需要反注册
 
     public:
         TileLayerComponent() = default;
@@ -92,13 +105,14 @@ namespace engine::component {
 
         void setOffset(const glm::vec2& offset) { offset_ = offset; }       ///< @brief 设置瓦片层的偏移量
         void setHidden(bool hidden) { is_hidden_ = hidden; }                ///< @brief 设置是否隐藏（不渲染）
-
+        void setPhysicsEngine(engine::physics::PhysicsEngine* physics_engine) { physics_engine_ = physics_engine; }
 
     protected:
         // 核心循环方法
         void init() override;
         void update(float, engine::core::Context&) override {}
         void render(engine::core::Context& context) override;
+        void clean() override;
     };
 
 } // namespace engine::component

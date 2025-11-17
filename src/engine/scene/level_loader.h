@@ -3,9 +3,13 @@
 #include <glm/vec2.hpp>
 #include <nlohmann/json.hpp>
 #include <map>
+#include <optional>
+#include "../utils/math.h"
 
 namespace engine::component {
+    class AnimationComponent;
     struct TileInfo;
+    enum class TileType;
 }
 
 namespace engine::scene {
@@ -29,7 +33,7 @@ namespace engine::scene {
          * @param scene 要加载数据的目标 Scene 对象。
          * @return bool 是否加载成功。
          */
-        bool loadLevel(const std::string& map_path, Scene& scene);
+        [[nodiscard]] bool loadLevel(const std::string& map_path, Scene& scene);
 
     private:
         void loadImageLayer(const nlohmann::json& layer_json, Scene& scene);    ///< @brief 加载图片图层
@@ -37,11 +41,69 @@ namespace engine::scene {
         void loadObjectLayer(const nlohmann::json& layer_json, Scene& scene);   ///< @brief 加载对象图层
 
         /**
+         * @brief 添加动画到指定的 AnimationComponent。
+         * @param anim_json 动画json数据（自定义）
+         * @param ac AnimationComponent 指针（动画添加到此组件）
+         * @param sprite_size 每一帧动画的尺寸
+         */
+        void addAnimation(const nlohmann::json& anim_json, engine::component::AnimationComponent* ac, const glm::vec2& sprite_size);
+
+        /**
+         * @brief 获取瓦片属性
+         * @tparam T 属性类型
+         * @param tile_json 瓦片json数据
+         * @param property_name 属性名称
+         * @return 属性值，如果属性不存在则返回 std::nullopt
+         */
+        template<typename T>
+        std::optional<T> getTileProperty(const nlohmann::json& tile_json, const std::string& property_name) {
+            if (!tile_json.contains("properties")) return std::nullopt;
+            const auto& properties = tile_json["properties"];
+            for (const auto& property : properties) {
+                if (property.contains("name") && property["name"] == property_name) {
+                    if (property.contains("value")) {
+                        return property["value"].get<T>();
+                    }
+                }
+            }
+            return std::nullopt;
+        }
+
+        /**
+         * @brief 获取瓦片碰撞器矩形
+         * @param tile_json 瓦片json数据
+         * @return 碰撞器矩形，如果碰撞器不存在则返回 std::nullopt
+         */
+        std::optional<engine::utils::Rect> getColliderRect(const nlohmann::json& tile_json);
+
+        /**
+         * @brief 根据瓦片json对象获取瓦片类型
+         * @param tile_json 瓦片json数据
+         * @return 瓦片类型
+         */
+        engine::component::TileType getTileType(const nlohmann::json& tile_json);
+
+        /**
+         * @brief 根据（单一图片）图块集中的id获取瓦片类型
+         * @param tileset_json 图块集json数据
+         * @param local_id 图块集中的id
+         * @return 瓦片类型
+         */
+        engine::component::TileType getTileTypeById(const nlohmann::json& tileset_json, int local_id);
+
+        /**
          * @brief 根据全局 ID 获取瓦片信息。
          * @param gid 全局 ID。
          * @return engine::component::TileInfo 瓦片信息。
          */
         engine::component::TileInfo getTileInfoByGid(int gid);
+
+        /**
+         * @brief 根据全局 ID 获取瓦片json对象 (用于对象层获取瓦片信息)
+         * @param gid 全局 ID
+         * @return 瓦片json对象
+         */
+        std::optional<nlohmann::json> getTileJsonByGid(int gid) const;
 
         /**
          * @brief 加载 Tiled tileset 文件 (.tsj)。

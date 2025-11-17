@@ -3,11 +3,16 @@
 #include "../component/transform_component.h"
 #include "../component/tilelayer_component.h"
 #include "../component/sprite_component.h"
+#include "../component/collider_component.h"
+#include "../component/physics_component.h"
+#include "../component/animation_component.h"
+#include "../component/health_component.h"
 #include "../object/game_object.h"
 #include "../scene/scene.h"
 #include "../core/context.h"
 #include "../resource/resource_manager.h"
 #include "../render/sprite.h"
+#include "../render/animation.h"
 #include "../utils/math.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -191,11 +196,208 @@ namespace engine::scene {
                 game_object->addComponent<engine::component::TransformComponent>(position, scale, rotation);
                 game_object->addComponent<engine::component::SpriteComponent>(std::move(tile_info.sprite), scene.getContext().getResourceManager());
 
+                // 获取瓦片json信息      1. 必然存在，因为getTileInfoByGid(gid)函数已经顺利执行
+                                    // 2. 这里再获取json，实际上检索了两次，未来可以优化
+                auto tile_json = getTileJsonByGid(gid);
+
+                // 获取碰信息：如果是SOLID类型，则添加物理组件，且图片源矩形区域就是碰撞盒大小
+                if (tile_info.type == engine::component::TileType::SOLID) {
+                    auto collider = std::make_unique<engine::physics::AABBCollider>(src_size);
+                    game_object->addComponent<engine::component::ColliderComponent>(std::move(collider));
+                    // 物理组件不受重力影响
+                    game_object->addComponent<engine::component::PhysicsComponent>(&scene.getContext().getPhysicsEngine(), false);
+                    // 设置标签方便物理引擎检索
+                    game_object->setTag("solid");
+                }
+                // 如果非SOLID类型，检查自定义碰撞盒是否存在
+                else if (auto rect = getColliderRect(tile_json); rect) {
+                    // 如果有，添加碰撞组件
+                    auto collider = std::make_unique<engine::physics::AABBCollider>(rect->size);
+                    auto* cc = game_object->addComponent<engine::component::ColliderComponent>(std::move(collider));
+                    cc->setOffset(rect->position);  // 自定义碰撞盒的坐标是相对于图片坐标，也就是针对Transform的偏移量
+                    // 和物理组件（默认不受重力影响）
+                    game_object->addComponent<engine::component::PhysicsComponent>(&scene.getContext().getPhysicsEngine(), false);
+                }
+
+                // 获取标签信息并设置
+                auto tag = getTileProperty<std::string>(tile_json, "tag");
+                if (tag) {
+                    game_object->setTag(tag.value());
+                }
+                // 如果是危险瓦片，且没有手动设置标签，则自动设置标签为 "hazard"
+                else if (tile_info.type == engine::component::TileType::HAZARD) {
+                    game_object->setTag("hazard");
+                }
+
+                // 获取重力信息并设置
+                auto gravity = getTileProperty<bool>(tile_json, "gravity");
+                if (gravity) {
+                    auto pc = game_object->getComponent<engine::component::PhysicsComponent>();
+                    if (pc) {
+                        pc->setUseGravity(gravity.value());
+                    }
+                    else {
+                        spdlog::warn("对象 '{}' 在设置重力信息时没有物理组件，请检查地图设置。", object_name);
+                        game_object->addComponent<engine::component::PhysicsComponent>(&scene.getContext().getPhysicsEngine(), gravity.value());
+                    }
+                }
+
+                // 获取动画信息并设置
+                auto anim_string = getTileProperty<std::string>(tile_json, "animation");
+                if (anim_string) {
+                    // 解析string为JSON对象
+                    nlohmann::json anim_json;
+                    try {
+                        anim_json = nlohmann::json::parse(anim_string.value());
+                    }
+                    catch (const nlohmann::json::parse_error& e) {
+                        spdlog::error("解析动画 JSON 字符串失败: {}", e.what());
+                        continue;  // 跳过此对象
+                    }
+                    // 添加AnimationComponent
+                    auto* ac = game_object->addComponent<engine::component::AnimationComponent>();
+                    // 添加动画到 AnimationComponent
+                    addAnimation(anim_json, ac, src_size);
+                }
+
+                // 获取生命值信息并设置
+                auto health = getTileProperty<int>(tile_json, "health");
+                if (health) {
+                    // 添加 HealthComponent
+                    game_object->addComponent<engine::component::HealthComponent>(health.value());
+                }
+
                 // 添加到场景中
                 scene.addGameObject(std::move(game_object));
                 spdlog::info("加载对象: '{}' 完成", object_name);
             }
         }
+    }
+
+    void LevelLoader::addAnimation(const nlohmann::json& anim_json, engine::component::AnimationComponent* ac, const glm::vec2& sprite_size)
+    {
+        // 检查 anim_json 必须是一个对象，并且 ac 不能为 nullptr
+        if (!anim_json.is_object() || !ac) {
+            spdlog::error("无效的动画 JSON 或 AnimationComponent 指针。");
+            return;
+        }
+        // 遍历动画 JSON 对象中的每个键值对（动画名称 : 动画信息）
+        for (const auto& anim : anim_json.items()) {
+            const std::string& anim_name = anim.key();
+            const auto& anim_info = anim.value();
+            if (!anim_info.is_object()) {
+                spdlog::warn("动画 '{}' 的信息无效或为空。", anim_name);
+                continue;
+            }
+            // 获取可能存在的动画帧信息
+            auto duration_ms = anim_info.value("duration", 100);        // 默认持续时间为100毫秒
+            auto duration = static_cast<float>(duration_ms) / 1000.0f;  // 转换为秒
+            auto row = anim_info.value("row", 0);                       // 默认行数为0
+            // 帧信息（数组）是必须存在的
+            if (!anim_info.contains("frames") || !anim_info["frames"].is_array()) {
+                spdlog::warn("动画 '{}' 缺少 'frames' 数组。", anim_name);
+                continue;
+            }
+            // 创建一个Animation对象 (默认为循环播放)
+            auto animation = std::make_unique<engine::render::Animation>(anim_name);
+
+            // 遍历数组并进行添加帧信息到animation对象
+            for (const auto& frame : anim_info["frames"]) {
+                if (!frame.is_number_integer()) {
+                    spdlog::warn("动画 {} 中 frames 数组格式错误！", anim_name);
+                    continue;;
+                }
+                auto column = frame.get<int>();
+                // 计算源矩形
+                SDL_FRect src_rect = {
+                    column * sprite_size.x,
+                    row * sprite_size.y,
+                    sprite_size.x,
+                    sprite_size.y
+                };
+                // 添加动画帧到 Animation
+                animation->addFrame(src_rect, duration);
+            }
+            // 将 Animation 对象添加到 AnimationComponent 中
+            ac->addAnimation(std::move(animation));
+        }
+    }
+
+    std::optional<engine::utils::Rect> LevelLoader::getColliderRect(const nlohmann::json& tile_json)
+    {
+        if (!tile_json.contains("objectgroup")) return std::nullopt;
+        auto& objectgroup = tile_json["objectgroup"];
+        if (!objectgroup.contains("objects")) return std::nullopt;
+        auto& objects = objectgroup["objects"];
+        for (const auto& object : objects) {    // 一个图片只支持一个碰撞器。如果有多个，则返回第一个不为空的
+            auto rect = engine::utils::Rect(glm::vec2(object.value("x", 0.0f), object.value("y", 0.0f)),
+                glm::vec2(object.value("width", 0.0f), object.value("height", 0.0f)));
+            if (rect.size.x > 0 && rect.size.y > 0) {
+                return rect;
+            }
+        }
+        return std::nullopt;    // 如果没找到碰撞器，则返回空
+    }
+
+    engine::component::TileType LevelLoader::getTileType(const nlohmann::json& tile_json)
+    {
+        if (tile_json.contains("properties")) {
+            auto& properties = tile_json["properties"];
+            for (auto& property : properties) {
+                if (property.contains("name") && property["name"] == "solid") {
+                    auto is_solid = property.value("value", false);
+                    return is_solid ? engine::component::TileType::SOLID : engine::component::TileType::NORMAL;
+                }
+                else if (property.contains("name") && property["name"] == "slope") {
+                    auto slope_type = property.value("value", "");
+                    if (slope_type == "0_1") {
+                        return engine::component::TileType::SLOPE_0_1;
+                    }
+                    else if (slope_type == "1_0") {
+                        return engine::component::TileType::SLOPE_1_0;
+                    }
+                    else if (slope_type == "0_2") {
+                        return engine::component::TileType::SLOPE_0_2;
+                    }
+                    else if (slope_type == "2_0") {
+                        return engine::component::TileType::SLOPE_2_0;
+                    }
+                    else if (slope_type == "2_1") {
+                        return engine::component::TileType::SLOPE_2_1;
+                    }
+                    else if (slope_type == "1_2") {
+                        return engine::component::TileType::SLOPE_1_2;
+                    }
+                    else {
+                        spdlog::error("未知的斜坡类型: {}", slope_type);
+                        return engine::component::TileType::NORMAL;
+                    }
+                }
+                else if (property.contains("name") && property["name"] == "unisolid") {
+                    auto is_unisolid = property.value("value", false);
+                    return is_unisolid ? engine::component::TileType::UNISOLID : engine::component::TileType::NORMAL;
+                }
+                else if (property.contains("name") && property["name"] == "hazard") {
+                    auto is_hazard = property.value("value", false);
+                    return is_hazard ? engine::component::TileType::HAZARD : engine::component::TileType::NORMAL;
+                }
+                // TODO: 可以在这里添加更多的自定义属性处理逻辑
+            }
+        }
+        return engine::component::TileType::NORMAL;
+    }
+
+    engine::component::TileType LevelLoader::getTileTypeById(const nlohmann::json& tileset_json, int local_id)
+    {
+        if (tileset_json.contains("tiles")) {
+            auto& tiles = tileset_json["tiles"];
+            for (auto& tile : tiles) {
+                if (tile.contains("id") && tile["id"] == local_id) {
+                    return getTileType(tile);
+                }
+            }
+        }
+        return engine::component::TileType::NORMAL;
     }
 
     engine::component::TileInfo LevelLoader::getTileInfoByGid(int gid)
@@ -234,7 +436,8 @@ namespace engine::scene {
                 static_cast<float>(tile_size_.y)
             };
             engine::render::Sprite sprite{ texture_id, texture_rect };
-            return engine::component::TileInfo(sprite, engine::component::TileType::NORMAL);    // 目前只完成渲染，以后再考虑瓦片类型
+            auto tile_type = getTileTypeById(tileset, local_id);   // 获取瓦片类型（只有瓦片id，还没找具体瓦片json）
+            return engine::component::TileInfo(sprite, tile_type);
         }
         else {   // 这是多图片的情况
             if (!tileset.contains("tiles")) {   // 没有tiles字段的话不符合数据格式要求，直接返回空的瓦片信息
@@ -264,13 +467,41 @@ namespace engine::scene {
                         static_cast<float>(tile_json.value("height", image_height))
                     };
                     engine::render::Sprite sprite{ texture_id, texture_rect };
-                    return engine::component::TileInfo(sprite, engine::component::TileType::NORMAL);    // 目前只完成渲染，以后再考虑瓦片类型
+                    auto tile_type = getTileType(tile_json);    // 获取瓦片类型（已经有具体瓦片json了）
+                    return engine::component::TileInfo(sprite, tile_type);
                 }
             }
         }
         // 如果能走到这里，说明查找失败，返回空的瓦片信息
         spdlog::error("图块集 '{}' 中未找到gid为 {} 的瓦片。", tileset_it->first, gid);
         return engine::component::TileInfo();
+    }
+
+    std::optional<nlohmann::json> LevelLoader::getTileJsonByGid(int gid) const
+    {
+        // 1. 查找tileset_data_中键小于等于gid的最近元素
+        auto tileset_it = tileset_data_.upper_bound(gid);
+        if (tileset_it == tileset_data_.begin()) {
+            spdlog::error("gid为 {} 的瓦片未找到图块集。", gid);
+            return std::nullopt;
+        }
+        --tileset_it;
+        // 2. 获取图块集json对象
+        const auto& tileset = tileset_it->second;
+        auto local_id = gid - tileset_it->first;        // 计算瓦片在图块集中的局部ID
+        if (!tileset.contains("tiles")) {   // 没有tiles字段的话不符合数据格式要求，直接返回空
+            spdlog::error("Tileset 文件 '{}' 缺少 'tiles' 属性。", tileset_it->first);
+            return std::nullopt;
+        }
+        // 3. 遍历tiles数组，根据id查找对应的瓦片并返回瓦片json
+        const auto& tiles_json = tileset["tiles"];
+        for (const auto& tile_json : tiles_json) {
+            auto tile_id = tile_json.value("id", 0);
+            if (tile_id == local_id) {   // 找到对应的瓦片，返回瓦片json
+                return std::make_optional<nlohmann::json>(tile_json);
+            }
+        }
+        return std::nullopt;
     }
 
     void LevelLoader::loadTileset(const std::string& tileset_path, int first_gid)
